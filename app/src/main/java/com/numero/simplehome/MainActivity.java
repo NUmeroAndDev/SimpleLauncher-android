@@ -38,12 +38,12 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.layout).setBackground(wallpaperManager.getDrawable());
 
         initList();
+
+        executeLoadApplication();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        executeLoadApplication();
+    public void onBackPressed() {
     }
 
     private void initList() {
@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private void executeLoadApplication() {
         Observable.fromIterable(getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA))
                 .filter(applicationInfo -> getPackageManager().getLaunchIntentForPackage(applicationInfo.packageName) != null)
+                .filter(applicationInfo -> !applicationInfo.packageName.equals(getPackageName()))
                 .map(applicationInfo -> {
                     String name = Observable.just(applicationInfo)
                             .map(info -> getPackageManager().getApplicationLabel(info))
