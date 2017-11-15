@@ -1,8 +1,5 @@
 package com.numero.simplehome.view;
 
-import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -13,19 +10,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.numero.simplehome.R;
+import com.numero.simplehome.model.App;
 
 import java.util.List;
 
-import io.reactivex.Observable;
-
 public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppViewHolder> {
 
-    private PackageManager packageManager;
-    private final List<ApplicationInfo> applicationInfoList;
+    private final List<App> appList;
 
-    public AppListAdapter(@NonNull Context context, @NonNull List<ApplicationInfo> applicationInfoList) {
-        this.packageManager = context.getPackageManager();
-        this.applicationInfoList = applicationInfoList;
+    public AppListAdapter(@NonNull List<App> appList) {
+        this.appList = appList;
     }
 
     @Override
@@ -36,18 +30,14 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppViewH
 
     @Override
     public void onBindViewHolder(AppViewHolder holder, int position) {
-        Observable.just(applicationInfoList.get(position))
-                .map(applicationInfo -> packageManager.getApplicationLabel(applicationInfo))
-                .map(charSequence -> (String) charSequence)
-                .subscribe(holder::setName);
-        Observable.just(applicationInfoList.get(position))
-                .map(applicationInfo -> packageManager.getApplicationIcon(applicationInfo))
-                .subscribe(holder::setIcon);
+        App app = appList.get(position);
+        holder.setName(app.getName());
+        holder.setIcon(app.getIcon());
     }
 
     @Override
     public int getItemCount() {
-        return applicationInfoList.size();
+        return appList.size();
     }
 
     public class AppViewHolder extends RecyclerView.ViewHolder {

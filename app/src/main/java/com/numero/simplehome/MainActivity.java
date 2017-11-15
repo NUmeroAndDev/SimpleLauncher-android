@@ -1,8 +1,8 @@
 package com.numero.simplehome;
 
 import android.app.WallpaperManager;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.numero.simplehome.model.App;
 import com.numero.simplehome.view.AppListAdapter;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
-    private List<ApplicationInfo> applicationList = new ArrayList<>();
+    private List<App> appList = new ArrayList<>();
     private AppListAdapter adapter;
 
     @Override
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initList() {
-        adapter = new AppListAdapter(getApplicationContext(), applicationList);
+        adapter = new AppListAdapter(appList);
 
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -56,12 +57,22 @@ public class MainActivity extends AppCompatActivity {
     private void executeLoadApplication() {
         Observable.fromIterable(getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA))
                 .filter(applicationInfo -> getPackageManager().getLaunchIntentForPackage(applicationInfo.packageName) != null)
+                .map(applicationInfo -> {
+                    String name = Observable.just(applicationInfo)
+                            .map(info -> getPackageManager().getApplicationLabel(info))
+                            .map(charSequence -> (String) charSequence)
+                            .blockingFirst();
+                    Drawable icon = Observable.just(applicationInfo)
+                            .map(info -> getPackageManager().getApplicationIcon(applicationInfo))
+                            .blockingFirst();
+                    return new App(name, icon, applicationInfo.packageName);
+                })
                 .toList()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(applicationInfoList -> {
-                    applicationList.clear();
-                    applicationList.addAll(applicationInfoList);
+                .subscribe(list -> {
+                    appList.clear();
+                    appList.addAll(list);
                     adapter.notifyDataSetChanged();
                 }, Throwable::printStackTrace);
     }
