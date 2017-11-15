@@ -3,6 +3,7 @@ package com.numero.simplehome;
 import android.app.WallpaperManager;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -47,11 +48,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void initList() {
         adapter = new AppListAdapter(appList);
+        adapter.setOnItemClickListener((view, position) -> {
+            App app = appList.get(position);
+            launchApp(app);
+        });
 
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapter);
+    }
+
+    private void launchApp(@NonNull App app) {
+        Observable.just(app)
+                .map(a -> getPackageManager().getLaunchIntentForPackage(a.getPackageName()))
+                .subscribe(this::startActivity);
     }
 
     private void executeLoadApplication() {

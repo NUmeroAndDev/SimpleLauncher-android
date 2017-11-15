@@ -18,8 +18,14 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppViewH
 
     private final List<App> appList;
 
+    private OnItemClickListener onItemClickListener;
+
     public AppListAdapter(@NonNull List<App> appList) {
         this.appList = appList;
+    }
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
     }
 
     @Override
@@ -33,6 +39,12 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppViewH
         App app = appList.get(position);
         holder.setName(app.getName());
         holder.setIcon(app.getIcon());
+
+        holder.itemView.setOnClickListener(v -> {
+            if (onItemClickListener != null) {
+                onItemClickListener.onItemClick(v, holder.getAdapterPosition());
+            }
+        });
     }
 
     @Override
@@ -59,5 +71,13 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppViewH
         public void setIcon(Drawable drawable) {
             iconImageView.setImageDrawable(drawable);
         }
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(View view, int position);
+    }
+
+    public interface OnItemLongClickListener {
+        void onItemLongClick(View view, int position);
     }
 }
