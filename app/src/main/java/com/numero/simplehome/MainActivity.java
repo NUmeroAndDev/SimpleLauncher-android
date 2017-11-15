@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(applicationInfoList -> {
+                    applicationList.clear();
                     applicationList.addAll(applicationInfoList);
                     adapter.notifyDataSetChanged();
                 }, Throwable::printStackTrace);

@@ -3,11 +3,13 @@ package com.numero.simplehome.view;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.numero.simplehome.R;
@@ -38,6 +40,9 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppViewH
                 .map(applicationInfo -> packageManager.getApplicationLabel(applicationInfo))
                 .map(charSequence -> (String) charSequence)
                 .subscribe(holder::setName);
+        Observable.just(applicationInfoList.get(position))
+                .map(applicationInfo -> packageManager.getApplicationIcon(applicationInfo))
+                .subscribe(holder::setIcon);
     }
 
     @Override
@@ -48,15 +53,21 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppViewH
     public class AppViewHolder extends RecyclerView.ViewHolder {
 
         private TextView nameTextView;
+        private ImageView iconImageView;
 
         public AppViewHolder(View itemView) {
             super(itemView);
 
             nameTextView = itemView.findViewById(R.id.name_text);
+            iconImageView = itemView.findViewById(R.id.icon_image_view);
         }
 
         public void setName(String name) {
             nameTextView.setText(name);
+        }
+
+        public void setIcon(Drawable drawable) {
+            iconImageView.setImageDrawable(drawable);
         }
     }
 }
