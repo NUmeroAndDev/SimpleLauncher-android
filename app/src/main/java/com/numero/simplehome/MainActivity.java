@@ -1,7 +1,9 @@
 package com.numero.simplehome;
 
 import android.app.WallpaperManager;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -66,18 +68,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void executeLoadApplication() {
-        Observable.fromIterable(getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA))
-                .filter(applicationInfo -> getPackageManager().getLaunchIntentForPackage(applicationInfo.packageName) != null)
-                .filter(applicationInfo -> !applicationInfo.packageName.equals(getPackageName()))
-                .map(applicationInfo -> {
-                    String name = Observable.just(applicationInfo)
-                            .map(info -> getPackageManager().getApplicationLabel(info))
+        Intent intent = new Intent(Intent.ACTION_MAIN, null);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        List<ResolveInfo> appInfoList = getPackageManager().queryIntentActivities(intent, 0);
+
+        if (appInfoList == null) {
+            return;
+        }
+
+        Observable.fromIterable(appInfoList)
+                .map(resolveInfo -> {
+                    String name = Observable.just(resolveInfo)
+                            .map(info -> info.loadLabel(getPackageManager()))
                             .map(charSequence -> (String) charSequence)
                             .blockingFirst();
-                    Drawable icon = Observable.just(applicationInfo)
-                            .map(info -> getPackageManager().getApplicationIcon(applicationInfo))
+                    Drawable icon = Observable.just(resolveInfo)
+                            .map(info -> info.loadIcon(getPackageManager()))
                             .blockingFirst();
-                    return new App(name, icon, applicationInfo.packageName);
+                    return new App(name, icon, resolveInfo.activityInfo.packageName);
                 })
                 .toList()
                 .subscribeOn(Schedulers.io())
