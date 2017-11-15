@@ -64,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
     private void launchApp(@NonNull App app) {
         Observable.just(app)
                 .map(a -> getPackageManager().getLaunchIntentForPackage(a.getPackageName()))
+                .map(intent -> intent.setAction(Intent.ACTION_MAIN))
+                .map(intent -> intent.addCategory(Intent.CATEGORY_LAUNCHER))
+                .map(intent -> intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED))
                 .subscribe(this::startActivity);
     }
 
