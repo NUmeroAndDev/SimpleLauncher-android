@@ -5,20 +5,24 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Window;
 import android.view.WindowManager;
+
+import com.numero.simplehome.view.AppListAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
     private List<ApplicationInfo> applicationList = new ArrayList<>();
+    private AppListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
         WallpaperManager wallpaperManager = WallpaperManager.getInstance(getApplicationContext());
         findViewById(R.id.layout).setBackground(wallpaperManager.getDrawable());
+
+        initList();
     }
 
     @Override
@@ -38,13 +44,24 @@ public class MainActivity extends AppCompatActivity {
         executeLoadApplication();
     }
 
+    private void initList() {
+        adapter = new AppListAdapter(getApplicationContext(), applicationList);
+
+        RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setAdapter(adapter);
+    }
+
     private void executeLoadApplication() {
-        Observable.create((ObservableOnSubscribe<List<ApplicationInfo>>) e -> e.onNext(getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA)))
+        Observable.fromIterable(getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA))
+                .filter(applicationInfo -> getPackageManager().getLaunchIntentForPackage(applicationInfo.packageName) != null)
+                .toList()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(list -> {
-                    applicationList.addAll(list);
-                }, throwable -> {
-                });
+                .subscribe(applicationInfoList -> {
+                    applicationList.addAll(applicationInfoList);
+                    adapter.notifyDataSetChanged();
+                }, Throwable::printStackTrace);
     }
 }
